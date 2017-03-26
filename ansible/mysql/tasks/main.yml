@@ -1,0 +1,30 @@
+# Main tasks
+
+
+- include_vars: secrets.yml
+
+
+- name: Check mandatory variables condition
+  assert:
+    that:
+      - mysql_version         is defined
+      - mysql_home            is defined
+      - mysql_client_port     is defined
+      - mysql_root_account    is defined
+      - mysql_app_database    is defined
+      - mysql_app_account     is defined
+    msg: "Some variables are missing."
+
+
+- include: "{{ deploy_tasks }}"
+  with_items:
+    - requirements.yml
+    - firewall.yml
+    - databases.yml
+    - users.yml
+  loop_control:
+    loop_var: deploy_tasks
+
+
+- name: Trigger handlers immediately
+  meta: flush_handlers

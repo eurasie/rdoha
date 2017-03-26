@@ -1,0 +1,49 @@
+# Tasks to install and setup MySQL Community Server
+
+
+- name: Add MySQL repository
+  become: true
+  yum_repository:
+    name: mysql-community
+    description: MySQL {{ mysql_version }} Community Server
+    file: /etc/yum.repos.d/mysql-community
+    baseurl: http://repo.mysql.com/yum/mysql-{{ mysql_version }}-community/el/{{ ansible_distribution_major_version }}/i386/
+    enabled: yes
+    gpgcheck: yes
+
+
+- name: Import rpm key
+  become: true
+  rpm_key:
+    key: http://dev.mysql.com/doc/refman/{{ mysql_version }}/en/checking-gpg-signature.html
+    state: present
+
+
+- name: Install Ansible dependencies for MySQL managment
+  become: true
+  yum:
+    name: MySQL-python
+    state: present
+
+
+- name: Install MySQL Community Server
+  become: true
+  yum:
+    name: mysql-community-server
+    state: present
+    update_cache: yes
+  notify:
+    - stop mysql
+    - change home directory in MySQL configuration file
+    - add client properties in MySQL configuration file
+    - move mysql user home directory
+    - restart mysql
+  register: mysql_fresh_install
+
+
+- name: Trigger handlers immediately
+  meta: flush_handlers
+
+
+- include: secure_installation.yml
+  when: mysql_fresh_install.changed

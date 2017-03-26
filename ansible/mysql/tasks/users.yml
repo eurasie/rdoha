@@ -1,0 +1,13 @@
+# Tasks to create users and grant privileges
+
+
+- name: Create {{ mysql_app_account.user }} account with {{ mysql_app_database }} database access
+  mysql_user:
+    login_user: "{{ mysql_root_account.user }}"
+    login_password: "{{ mysql_root_account.password }}"
+    login_unix_socket: "{{ mysql_home }}/mysql.sock"
+    name: "{{ mysql_app_account.user }}"
+    host: '%'
+    password: "{{ mysql_app_account.password }}"
+    priv: '{{ mysql_app_database }}.*:ALL'
+    state: present

@@ -1,0 +1,10 @@
+# Tasks to create databases
+
+
+- name: Create {{ mysql_app_database }} database
+  mysql_db:
+    login_user: "{{ mysql_root_account.user }}"
+    login_password: "{{ mysql_root_account.password }}"
+    login_unix_socket: "{{ mysql_home }}/mysql.sock"
+    name: "{{ mysql_app_database }}"
+    state: present
