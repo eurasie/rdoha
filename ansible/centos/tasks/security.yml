@@ -1,0 +1,43 @@
+# Tasks to configure security parameters on CentOS
+
+
+- name: System security configuration
+  become: true
+  lineinfile:
+    dest: "{{ item.dest }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    backrefs: yes
+  with_items:
+    # Disable Requiretty
+    # If set, sudo can only be run from a login session
+    - { dest: /etc/sudoers, regexp: "^Defaults    requiretty", line: "#Defaults    requiretty" }
+    # Disable remote root login access
+    - { dest: /etc/ssh/sshd_config, regexp: "^PermitRootLogin", line: "#PermitRootLogin yes" }
+    - { dest: /etc/ssh/sshd_config, regexp: "^PasswordAuthentication", line: "PasswordAuthentication no" }
+  notify:
+    - restart sshd
+
+
+# SELinux is a system-call firewall for applications
+- name: Disable SELinux
+  become: true
+  lineinfile:
+    dest: /etc/sysconfig/selinux
+    regexp: "^SELINUX="
+    line: "SELINUX=disabled"
+    state: present
+  when:
+    ansible_env.container is not defined
+    or ansible_env.container != "docker"
+  notify:
+    - reboot machine
+
+
+- name: Start firewall
+  become: true
+  service:
+    name: firewalld
+    state: started
+    enabled: yes

@@ -1,0 +1,33 @@
+# Task to update and install additional packages on CentOS
+
+
+- name: First configuration check
+  become: true
+  stat:
+    path: /app
+  register: app_dir
+
+
+- name: Upgrade all packages at first configuration
+  become: true
+  yum:
+    name: '*'
+    state: latest
+    update_cache: yes
+  when: app_dir.stat.exists == False
+  notify:
+    - reboot machine
+
+
+- name: Install additionnal packages
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    # Data compressor tools
+    - unzip
+    # Ansible dependency to perform request
+    - libselinux-python
+    # Netcat is a feature-rich network debugging and exploration tool
+    - nmap-ncat

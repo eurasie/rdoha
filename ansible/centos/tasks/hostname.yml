@@ -1,0 +1,24 @@
+# Task to setup Hostname on CentOS
+
+
+- name: Setup hostname
+  become: true
+  lineinfile:
+    dest: "{{ item.dest }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  with_items:
+    - { dest: /etc/hostname, regexp: "(.*)", line: "{{ inventory_hostname }}" }
+    - { dest: /etc/sysconfig/network, regexp: "HOSTNAME=", line: "HOSTNAME={{ inventory_hostname }}" }
+  notify:
+    - reboot machine
+
+
+- name: Setup hosts
+  become: true
+  lineinfile:
+    dest: /etc/hosts
+    line: "127.0.0.1 localhost {{ inventory_hostname }}"
+    insertbefore: BOF
+    state: present
