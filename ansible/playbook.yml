@@ -1,0 +1,7 @@
+# Rdoha Project Playbook
+
+
+- name: Set up CentOS server
+  hosts: rdoha_server
+  roles:
+    - centos
