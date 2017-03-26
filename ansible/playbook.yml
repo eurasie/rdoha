@@ -5,3 +5,4 @@
   hosts: rdoha_server
   roles:
     - centos
+    - httpd

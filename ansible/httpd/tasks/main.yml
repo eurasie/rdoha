@@ -1,0 +1,28 @@
+# Main tasks
+
+
+- include_vars: secrets.yml
+
+
+- name: Check mandatory variables condition
+  assert:
+    that:
+      - httpd_version       is defined
+      - mod_ssl_version     is defined
+      - httpd_home          is defined
+      - httpd_port          is defined
+      - httpd_ssl_port      is defined
+    msg: "Some variables are missing."
+
+
+- include: "{{ deploy_tasks }}"
+  with_items:
+    - httpd.yml
+    - ssl.yml
+    - firewall.yml
+  loop_control:
+    loop_var: deploy_tasks
+
+
+- name: Trigger handlers immediately
+  meta: flush_handlers

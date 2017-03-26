@@ -1,0 +1,24 @@
+# Task to install and set up ssl for Apache server
+
+
+- name: Install mod_ssl
+  become: true
+  yum:
+    name: mod_ssl-{{ mod_ssl_version }}
+    state: present
+  register: mod_ssl_fresh_install
+
+
+- name: Replace in ssl.conf
+  become: true
+  lineinfile:
+    dest: /etc/httpd/conf.d/ssl.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  with_items:
+    - { regexp: "^Listen *", line: "Listen {{ httpd_ssl_port }} https" }
+    - { regexp: "<VirtualHost *", line: "<VirtualHost _default_:{{ httpd_ssl_port }}>" }
+    - { regexp: "ServerName *", line: "ServerName {{ inventory_hostname }}" }
+  notify:
+    - restart httpd

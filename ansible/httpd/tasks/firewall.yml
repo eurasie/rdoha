@@ -1,0 +1,12 @@
+# Tasks to set up firewall rules
+
+
+- name: Create firewall rule for httpd server
+  become: true
+  command: "{{ item }}"
+  with_items:
+    - firewall-cmd --zone=public --add-port={{ httpd_port }}/tcp --permanent
+    - firewall-cmd --zone=public --add-port={{ httpd_ssl_port }}/tcp --permanent
+    - firewall-cmd --reload
+  when:
+    - httpd_fresh_install.changed or mod_ssl_fresh_install.changed

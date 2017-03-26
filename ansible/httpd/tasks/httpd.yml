@@ -1,0 +1,49 @@
+# Task to install and set up Apache server as reverse proxy
+
+
+- name: Install httpd
+  become: true
+  yum:
+    name: httpd-{{ httpd_version }}
+    state: present
+  register: httpd_fresh_install
+
+
+- name: Create {{ httpd_home }} directory
+  become: true
+  file:
+    path: "{{ httpd_home }}"
+    state: directory
+
+
+- name: Configure http port
+  become: true
+  lineinfile:
+    dest: /etc/httpd/conf/httpd.conf
+    regexp: "^Listen *"
+    line: "Listen {{ httpd_port }}"
+    state: present
+  notify:
+    - restart httpd
+
+
+- name: Setup server name
+  become: true
+  lineinfile:
+    dest: /etc/httpd/conf/httpd.conf
+    regexp: "^#ServerName *"
+    line: "ServerName {{ inventory_hostname }}"
+    state: present
+    backrefs: yes
+  notify:
+    - restart httpd
+
+
+- name: Append in httpd config
+  become: true
+  lineinfile:
+    dest: /etc/httpd/conf/httpd.conf
+    line: "IncludeOptional {{ httpd_home }}/*.conf"
+    state: present
+  notify:
+    - restart httpd
