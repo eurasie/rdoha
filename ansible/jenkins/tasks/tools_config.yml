@@ -1,0 +1,11 @@
+# Task to setup necessary tools for a Jenkins instance
+
+
+- name: Git configuration for jenkins user
+  become: true
+  become_user: jenkins
+  shell: |
+    {{ git_env_path }}/git config --global url."https://".insteadOf git://
+    {{ git_env_path }}/git config --global user.email "rdoha_ci@{{ inventory_hostname }}.com"
+    {{ git_env_path }}/git config --global user.name "rdoha_ci"
+  changed_when: false

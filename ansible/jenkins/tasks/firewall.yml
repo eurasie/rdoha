@@ -1,0 +1,11 @@
+# Tasks to set up firewall properties for a MySQL instance
+
+
+- name: Create firewall rule for Jenkins
+  become: true
+  command: "{{ item }}"
+  with_items:
+    - firewall-cmd --zone=public --add-port={{ jenkins_http_port }}/tcp --permanent
+    - firewall-cmd --reload
+  when:
+    - jenkins_fresh_install.changed

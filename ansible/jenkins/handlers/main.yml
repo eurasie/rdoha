@@ -1,0 +1,71 @@
+- name: stop jenkins
+  become: true
+  service:
+    name: jenkins
+    state: stopped
+
+
+- name: create jenkins user home directory and generate ssh key
+  become: true
+  user:
+    name: jenkins
+    home: "{{ jenkins_home }}"
+    createhome: yes
+    move_home: yes
+    generate_ssh_key: yes
+    ssh_key_comment: jenkins-{{ inventory_hostname }}
+
+
+- name: create jenkins init scripts directory
+  become: true
+  become_user: jenkins
+  file:
+    path: "{{ jenkins_home }}/init.groovy.d"
+    state: directory
+    mode: 0755
+
+
+- name: setup jenkins environment
+  become: true
+  lineinfile:
+    dest: /etc/sysconfig/jenkins
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: '^JENKINS_HOME=*', line: 'JENKINS_HOME="{{ jenkins_home }}"' }
+    - {
+        regexp: '^JENKINS_JAVA_OPTIONS=*',
+        line: 'JENKINS_JAVA_OPTIONS="
+                -Djava.awt.headless=true
+                -Djenkins.install.runSetupWizard=false
+                -Dorg.apache.commons.jelly.tags.fmt.timeZone={{ jenkins_timezone }}
+              "'
+      }
+    - { regexp: '^JENKINS_PORT=*', line: 'JENKINS_PORT="{{ jenkins_http_port }}"' }
+
+
+- name: configure jenkin default users and security
+  become: true
+  template:
+    src: groovy/basic_security.groovy
+    dest: "{{ jenkins_home }}/init.groovy.d/"
+
+
+- name: restart jenkins
+  become: true
+  service:
+    name: jenkins
+    enabled: yes
+    state: restarted
+  notify:
+    - wait for Jenkins to start up before proceeding
+
+
+- name: wait for Jenkins to start up before proceeding
+  shell: "curl -D - --silent --max-time 5 http://127.0.0.1:{{ jenkins_http_port }}/cli/"
+  register: result
+  until: (result.stdout.find("403 Forbidden") != -1) or (result.stdout.find("200 OK") != -1) and (result.stdout.find("Please wait while") == -1)
+  retries: 30
+  delay: 5
+  changed_when: false
+  check_mode: no

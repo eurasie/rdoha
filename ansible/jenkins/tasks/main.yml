@@ -1,0 +1,34 @@
+# Main task
+
+
+- include_vars: secrets.yml
+
+
+- name: Check mandatory variables condition
+  assert:
+    that:
+      - java_version              is defined
+      - jenkins_version           is defined
+      - jenkins_home              is defined
+      - jenkins_timezone          is defined
+      - jenkins_http_port         is defined
+      - jenkins_jar               is defined
+      - jenkins_env_variables     is defined
+      - jenkins_accounts          is defined
+      - jenkins_plugins           is defined
+    msg: "Some variables are missing."
+
+
+- include: "{{ deploy_tasks }}"
+  with_items:
+    - jenkins_config.yml
+    - firewall.yml
+    - plugins.yml
+    - custom_config.yml
+    - tools_config.yml
+  loop_control:
+    loop_var: deploy_tasks
+
+
+- name: Trigger handlers immediately
+  meta: flush_handlers

@@ -1,0 +1,12 @@
+# Task to parameterize and customize Jenkins
+
+
+- name: Get templates of Jenkins custom init scripts
+  become: true
+  template:
+    src: "{{ item }}"
+    dest: "{{ jenkins_home }}/init.groovy.d/"
+  with_items:
+    - groovy/global_properties.groovy
+  notify:
+    - restart jenkins
