@@ -1,0 +1,27 @@
+# Main tasks
+
+
+- include_vars: secrets.yml
+
+
+- name: Check mandatory variables condition
+  assert:
+    that:
+      - noip_port              is defined
+      - noip_username          is defined
+      - noip_password          is defined
+      - noip_hostname          is defined
+    msg: "Some variables are missing."
+
+
+- include: "{{ deploy_tasks }}"
+  with_items:
+#    - firewall.yml
+    - install.yml
+#    - service.yml
+  loop_control:
+    loop_var: deploy_tasks
+
+
+- name: Trigger handlers immediately
+  meta: flush_handlers

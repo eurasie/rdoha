@@ -1,0 +1,65 @@
+- name: stop mariadb
+  become: true
+  service:
+    name: mariadb
+    state: stopped
+
+
+- name: configure MariaDB port
+  become: true
+  lineinfile:
+    dest: /etc/my.cnf
+    insertafter: "^\\[mysqld\\]"
+    line: "port={{ mariadb_port }}"
+    state: present
+
+
+- name: configure MariaDB service
+  become: true
+  lineinfile:
+    dest: /etc/my.cnf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  with_items:
+    - { regexp: "^datadir=", line: "datadir={{ mariadb_home }}" }
+    - { regexp: "^socket=", line: "socket={{ mariadb_home }}/mysql.sock" }
+
+
+- name: configure MariaDB client
+  become: true
+  blockinfile:
+    dest: /etc/my.cnf
+    insertafter: EOF
+    content: |
+      [client]
+      port={{ mariadb_port }}
+      socket={{ mariadb_home }}/mysql.sock
+
+
+- name: move mysql user home directory
+  become: true
+  user:
+    name: mysql
+    home: "{{ mariadb_home }}"
+    createhome: yes
+    move_home: yes
+    system: yes
+
+
+- name: restart mariadb
+  become: true
+  service:
+    name: mariadb
+    state: restarted
+    enabled: yes
+  notify:
+    - wait for mariadb
+
+
+- name: wait for mariadb
+  local_action: wait_for
+    host={{ ansible_host }}
+    port={{ mariadb_port }}
+    delay=2
+    timeout=30

@@ -1,7 +1,7 @@
 # Task to install and set up Apache server as reverse proxy
 
 
-- name: Install httpd
+- name: Install Apache server
   become: true
   yum:
     name: httpd-{{ httpd_version }}
@@ -9,41 +9,45 @@
   register: httpd_fresh_install
 
 
-- name: Create {{ httpd_home }} directory
+- name: Create {{ httpd_home }} directories
   become: true
+  become_user: app
   file:
-    path: "{{ httpd_home }}"
+    path: "{{ item }}"
     state: directory
+  with_items:
+    - "{{ httpd_home }}"
+    - "{{ httpd_home }}/conf.d"
+    - "{{ httpd_home }}/www"
+    - "{{ httpd_home }}/www/html"
 
 
-- name: Configure http port
+- name: Configure Apache server
   become: true
   lineinfile:
     dest: /etc/httpd/conf/httpd.conf
-    regexp: "^Listen *"
-    line: "Listen {{ httpd_port }}"
-    state: present
-  notify:
-    - restart httpd
-
-
-- name: Setup server name
-  become: true
-  lineinfile:
-    dest: /etc/httpd/conf/httpd.conf
-    regexp: "^#ServerName *"
-    line: "ServerName {{ inventory_hostname }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
     state: present
     backrefs: yes
+  with_items:
+    # Set up port
+    - { regexp: "^Listen *", line: "Listen {{ httpd_port }}" }
+    # Set up server name
+    - { regexp: "^#ServerName *", line: "ServerName {{ inventory_hostname }}" }
+    # Set up documents root directory
+    - { regexp: "^DocumentRoot *", line: "DocumentRoot \"{{ httpd_home }}/www/html\"" }
+    - { regexp: "^<Directory \".*/www\">", line: "<Directory \"{{ httpd_home }}/www\">" }
+    - { regexp: "^<Directory \".*/html\">", line: "<Directory \"{{ httpd_home }}/www/html\">" }
   notify:
     - restart httpd
 
 
-- name: Append in httpd config
+- name: Append custom config files directory
   become: true
   lineinfile:
     dest: /etc/httpd/conf/httpd.conf
-    line: "IncludeOptional {{ httpd_home }}/*.conf"
+    line: "IncludeOptional {{ httpd_home }}/conf.d/*"
     state: present
   notify:
     - restart httpd

@@ -1,0 +1,47 @@
+# Tasks to install Git on CentOS
+
+
+- name: Install Git dependencies for compilation
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - gcc
+    - make
+    - libcurl-devel
+    - expat-devel
+    - gettext
+    - openssl-devel
+    - perl-devel
+    - zlib-devel
+
+
+- name: Get Git {{ git_version }} sources
+  become: true
+  unarchive:
+    src: https://github.com/git/git/archive/v{{ git_version }}.tar.gz
+    dest: /opt/
+    remote_src: yes
+  changed_when: false
+  register: get_git_sources
+  until: get_git_sources | succeeded
+  retries: 5
+  delay: 10
+
+
+- name: Compile Git {{ git_version }} sources
+  become: true
+  shell: |
+    make prefix={{ git_home }} all
+    make prefix={{ git_home }} install
+  args:
+    chdir: /opt/git-{{ git_version }}/
+    creates: "{{ git_home }}"
+
+
+- name: Setup environment with Git
+  become: true
+  template:
+    src: git.sh
+    dest: /etc/profile.d/

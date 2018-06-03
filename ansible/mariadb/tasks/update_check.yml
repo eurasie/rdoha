@@ -1,0 +1,51 @@
+# Tasks to check for update and remove previous installation of MariaDB Server
+
+
+- name: Get installed MariaDB server info
+  command:
+    mysql \
+      -u root \
+      -p{{ mariadb_root_password }} \
+      -NBe \
+    'SELECT @@version;'
+  register: mariadb_info
+  changed_when: false
+  ignore_errors: yes
+
+
+- set_fact:
+    mariadb_previous_version: "{{
+        mariadb_info.stdout
+          | regex_replace('^(\\d+\\.\\d+\\.\\d+).*$', '\\1')
+      }}"
+  when: mariadb_info.stdout is defined
+
+
+- name: Stop MariaDB server
+  become: true
+  service:
+    name: mariadb
+    state: stopped
+  when:
+    - mariadb_previous_version is defined
+    - mariadb_version != mariadb_previous_version
+
+
+- name: Get previous installed packages
+  shell: rpm -qa | grep mariadb
+  changed_when: false
+  register: mariadb_installed_packages
+  when:
+    - mariadb_previous_version is defined
+    - mariadb_version != mariadb_previous_version
+
+
+- name: Remove previous installation
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ mariadb_installed_packages.stdout_lines }}"
+  when:
+    - mariadb_previous_version is defined
+    - mariadb_version != mariadb_previous_version

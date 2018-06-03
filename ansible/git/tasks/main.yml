@@ -1,4 +1,4 @@
-# Task to install git on CentOS
+# Main tasks
 
 
 - include_vars: secrets.yml
@@ -13,47 +13,13 @@
     msg: "Some variables are missing."
 
 
-- name: Uninstall previous
-  become: true
-  yum:
-    name: git
-    state: absent
-
-
-- name: Install dependencies for Git compilation
-  become: true
-  yum: name={{ item }} state=present
+- include: "{{ deploy_tasks }}"
   with_items:
-    - gcc
-    - libcurl-devel
-    - expat-devel
-    - gettext
-    - openssl-devel
-    - perl-devel
-    - zlib-devel
+    - update_check.yml
+    - install.yml
+  loop_control:
+    loop_var: deploy_tasks
 
 
-- name: Get Git {{ git_version }} sources
-  become: true
-  unarchive:
-    src: https://github.com/git/git/archive/v{{ git_version }}.tar.gz
-    dest: /opt/
-    remote_src: yes
-  changed_when: false
-
-
-- name: Compile Git {{ git_version }} sources
-  become: true
-  shell: |
-    make prefix={{ git_home }} all
-    make prefix={{ git_home }} install
-  args:
-    chdir: /opt/git-{{ git_version }}/
-    creates: "{{ git_home }}"
-
-
-- name: Setup environment with Git {{ git_version }}
-  become: true
-  template:
-    src: git.sh
-    dest: /etc/profile.d/git.sh
+- name: Trigger handlers immediately
+  meta: flush_handlers

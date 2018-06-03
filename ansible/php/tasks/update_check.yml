@@ -1,0 +1,36 @@
+# Tasks to check for update and remove previous installation of PHP
+
+
+- name: Get installed PHP info
+  command: php --version
+  ignore_errors: yes
+  changed_when: false
+  register: php_info
+
+
+- set_fact:
+    php_previous_version: "{{
+        php_info.stdout_lines[0]
+          | regex_replace('^.* (\\d+\\.\\d+\\.\\d+).*$', '\\1')
+      }}"
+  when: php_info.stderr_lines is defined
+
+
+- name: Get previous installed packages
+  shell: rpm -qa | grep php
+  changed_when: false
+  register: php_installed_packages
+  when:
+    - php_previous_version is defined
+    - php_version != php_previous_version
+
+
+- name: Remove previous installation
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ php_installed_packages.stdout_lines }}"
+  when:
+    - php_previous_version is defined
+    - php_version != php_previous_version

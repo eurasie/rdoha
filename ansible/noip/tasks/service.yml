@@ -1,0 +1,15 @@
+# Task to configure no-ip client as a daemon
+
+
+- name: Configure noip service
+  become: true
+  command: cp -p 755 /opt/{{ noip_directory.stdout }}/redhat.noip.sh /etc/init.d/noip
+  changed_when: false
+
+
+- name: Enable noip client on boot
+  become: true
+  service:
+    name: noip
+    enabled: yes
+    state: restarted

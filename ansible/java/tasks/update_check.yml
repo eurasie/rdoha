@@ -1,0 +1,62 @@
+# Tasks to check for update and remove previous installation of Java
+
+
+- name: Check Java installed from repositories
+  shell: rpm -qa | grep '^java-'
+  changed_when: false
+  ignore_errors: yes
+  register: java_installed_packages
+
+
+- name: Remove Java installed from repositories
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ java_installed_packages.stdout_lines }}"
+  when: java_installed_packages is defined
+
+
+# ---------------------------------------------------------------------------------
+
+
+- name: Get installed Java info
+  command: java -version
+  ignore_errors: yes
+  changed_when: false
+  register: java_info
+
+
+- set_fact:
+    java_previous_version: "{{
+        java_info.stderr_lines[0]
+          | regex_replace('^.* \"(.*)\"$', '\\1')
+      }}"
+  when: java_info.stderr_lines is defined
+
+
+# TODO: Check if services using Java survives
+
+
+- name: Remove previous binaries links
+  become: true
+  shell: |
+    alternatives --remove java  /opt/jdk{{ java_previous_version }}/bin/java
+    alternatives --remove jar   /opt/jdk{{ java_previous_version }}/bin/jar
+    alternatives --remove javac /opt/jdk{{ java_previous_version }}/bin/javac
+  when:
+    - java_previous_version is defined
+    - java_version != java_previous_version
+
+
+- name: Remove previous sources
+  become: true
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/opt/jdk{{ java_previous_version }}"
+    - "/opt/jdk-{{ java_previous_version | regex_replace('^\\d+.(\\d+).*$', '\\1') }}u{{ java_previous_version | regex_replace('^.*_(\\d+)$', '\\1') }}-linux-arm32-vfp-hflt.tar.gz"
+  when:
+    - java_previous_version is defined
+    - java_version != java_previous_version

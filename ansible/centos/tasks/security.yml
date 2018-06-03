@@ -28,9 +28,6 @@
     regexp: "^SELINUX="
     line: "SELINUX=disabled"
     state: present
-  when:
-    ansible_env.container is not defined
-    or ansible_env.container != "docker"
   notify:
     - reboot machine
 

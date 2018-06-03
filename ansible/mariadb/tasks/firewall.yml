@@ -1,0 +1,9 @@
+# Tasks to set up firewall properties for a MariaDB server
+
+
+- name: Create firewall rule for MariaDB
+  become: true
+  shell: |
+    firewall-cmd --zone=public --add-port={{ mariadb_port }}/tcp --permanent
+    firewall-cmd --reload
+  when: mariadb_previous_version is not defined

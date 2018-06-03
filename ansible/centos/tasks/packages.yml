@@ -14,7 +14,7 @@
     name: '*'
     state: latest
     update_cache: yes
-  when: app_dir.stat.exists == False
+  when: app_dir.stat.exists == false
   notify:
     - reboot machine
 
@@ -29,5 +29,9 @@
     - unzip
     # Ansible dependency to perform request
     - libselinux-python
+    # Network downloader
+    - wget
+    # Logs rotation configurator
+    - logrotate
     # Netcat is a feature-rich network debugging and exploration tool
     - nmap-ncat

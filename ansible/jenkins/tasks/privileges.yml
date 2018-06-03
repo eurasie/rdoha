@@ -1,0 +1,18 @@
+# Tasks to grant additional privileges
+
+
+- name: Allow app user to manage jenkins service
+  become: true
+  lineinfile:
+    dest: /etc/sudoers
+    line: 'app ALL = NOPASSWD: /sbin/service jenkins*'
+    state: present
+    validate: 'visudo -cf %s'
+
+
+- name: Jenkins ssh public key become readable
+  become: true
+  file:
+    path: "{{ jenkins_home }}/.ssh"
+    state: directory
+    mode: 0755

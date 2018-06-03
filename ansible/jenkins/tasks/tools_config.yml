@@ -1,6 +1,29 @@
 # Task to setup necessary tools for a Jenkins instance
 
 
+# ---------------------------------------------------------------------------------
+# Apache server
+
+- name: Set httpd mod_proxy for jenkins
+  become: true
+  template:
+    src: templates/jenkins.conf
+    dest: /app/httpd/conf.d/
+  register: mod_proxy
+
+
+- name: Restart httpd
+  become: true
+  service:
+    name: httpd
+    state: restarted
+    enabled: yes
+  when: mod_proxy.changed
+
+
+# ---------------------------------------------------------------------------------
+# Git
+
 - name: Git configuration for jenkins user
   become: true
   become_user: jenkins

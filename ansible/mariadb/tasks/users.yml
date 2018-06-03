@@ -1,0 +1,13 @@
+# Tasks to create users and grant privileges
+
+
+- name: Create {{ mariadb_app_account.user }} account with {{ mariadb_app_database }} database access
+  mysql_user:
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    login_unix_socket: "{{ mariadb_home }}/mysql.sock"
+    name: "{{ mariadb_app_account.user }}"
+    host: '%'
+    password: "{{ mariadb_app_account.password }}"
+    priv: '{{ mariadb_app_database }}.*:ALL'
+    state: present

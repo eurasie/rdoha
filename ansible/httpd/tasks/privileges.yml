@@ -1,0 +1,10 @@
+# Tasks to grant additional privileges
+
+
+- name: Allow app user to manage httpd service
+  become: true
+  lineinfile:
+    dest: /etc/sudoers
+    line: 'app ALL = NOPASSWD: /sbin/service httpd*'
+    state: present
+    validate: 'visudo -cf %s'

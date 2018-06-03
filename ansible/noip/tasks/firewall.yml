@@ -1,0 +1,16 @@
+# Tasks to set up firewall properties for noip client
+
+
+- name: First configuration check
+  become: true
+  stat:
+    path: /usr/local/bin/noip2
+  register: noip_install
+
+
+- name: Create firewall rule for noip
+  become: true
+  shell: |
+    firewall-cmd --zone=public --add-port={{ noip_port }}/tcp --permanent
+    firewall-cmd --reload
+  when: noip_install.stat.exists

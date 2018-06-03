@@ -22,4 +22,4 @@
     host={{ ansible_host }}
     port={{ ansible_port }}
     delay=20
-    timeout=300
+    timeout=120

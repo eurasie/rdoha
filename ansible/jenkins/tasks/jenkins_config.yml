@@ -1,13 +1,6 @@
 # Task to setup Jenkins
 
 
-- name: Install Java {{ java_version }} OpenJDK Development Environment
-  become: true
-  yum:
-    name: java-{{ java_version }}-openjdk-devel
-    state: present
-
-
 - name: Add Jenkins repository
   become: true
   yum_repository:
@@ -36,7 +29,7 @@
     - create jenkins user home directory and generate ssh key
     - create jenkins init scripts directory
     - setup jenkins environment
-    - configure jenkin default users and security
+    - configure jenkins default users and security
     - restart jenkins
   register: jenkins_fresh_install
 

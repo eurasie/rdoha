@@ -1,0 +1,22 @@
+# Tasks to configure other parameters on CentOS
+
+
+- name: Setup timezone
+  become: true
+  file:
+    src: /usr/share/zoneinfo/Europe/Paris
+    dest: /etc/localtime
+    state: link
+    force: yes
+
+
+- name: Setup language for users
+  become: true
+  copy:
+    src: language.sh
+    dest: /etc/profile.d/
+
+
+- name: Setup AZERTY keyboard
+  become: true
+  command: localectl set-keymap fr

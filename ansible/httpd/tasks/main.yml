@@ -20,6 +20,7 @@
     - httpd.yml
     - ssl.yml
     - firewall.yml
+    - privileges.yml
   loop_control:
     loop_var: deploy_tasks
 

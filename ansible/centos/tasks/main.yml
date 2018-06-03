@@ -7,7 +7,9 @@
 - name: Check mandatory variables condition
   assert:
     that:
-      - admin_users         is defined
+      - root_user            is defined
+      - admin_users          is defined
+      - app_user             is defined
     msg: "Some variables are missing."
 
 
@@ -15,8 +17,9 @@
   with_items:
     - packages.yml
     - hostname.yml
-    - app_and_users.yml
+    - users.yml
     - security.yml
+    - others.yml
   loop_control:
     loop_var: deploy_tasks
 

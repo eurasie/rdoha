@@ -1,0 +1,67 @@
+# Task to install no-ip client on CentOS
+
+
+- name: Install dependencies for noip compilation
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - gcc
+    - make
+
+
+- name: Get noip sources
+  become: true
+  unarchive:
+    src: http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz
+    dest: /opt/
+    remote_src: yes
+  changed_when: false
+
+
+- name: Get noip directory
+  become: true
+  shell: ls /opt/ | grep noip
+  changed_when: false
+  register: noip_directory
+
+
+# Downloaded archive comes with metadata files started with "._*"
+- name: Remove useless metadata files
+  become: true
+  shell: |
+    rm -f /opt/._*
+    rm -rf $(find /opt/{{ noip_directory.stdout }}/ -name ._*)
+
+
+- name: Set noip directory owner to root
+  become: true
+  file:
+    path: /opt/{{ noip_directory.stdout }}
+    state: directory
+    owner: root
+    group: root
+    recurse: yes
+
+
+- name: Compile noip sources
+  become: true
+  command: |
+    make
+    make install
+  args:
+    chdir: /opt/{{ noip_directory.stdout }}/
+    creates: /usr/local/bin/noip2
+
+
+#chmod 700 /usr/local/bin/noip2
+#chown root:root /usr/local/bin/noip2
+
+#- name: Configure noip service
+#  shell:
+#    /usr/local/bin/noip2 -C
+#    /usr/local/etc/no-ip2.conf
+
+#chmod 600 /usr/local/etc/no-ip2.conf.
+#chown root:root /usr/local/etc/no-ip2.conf.

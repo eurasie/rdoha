@@ -1,0 +1,63 @@
+# Tasks for users creations
+
+
+- name: Modify root user
+  become: true
+  user:
+    name: "{{ root_user.user }}"
+    password: "{{ root_user.password  | password_hash('sha512') }}"
+
+
+# ---------------------------------------------------------------------------------
+# admins
+
+- name: Create admin users
+  become: true
+  user:
+    name: "{{ item.user }}"
+  with_items: "{{ admin_users }}"
+
+
+- name: Add admins ssh keys
+  become: true
+  authorized_key:
+    user: "{{ item.user }}"
+    key: "{{ item.key }}"
+  with_items: "{{ admin_users }}"
+
+
+- name: Add admins to sudoers
+  become: true
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: '^{{ item.user }} ALL\='
+    line: '{{ item.user }} ALL=(ALL) NOPASSWD:ALL'
+    state: present
+    validate: 'visudo -cf %s'
+  with_items: "{{ admin_users }}"
+
+
+# ---------------------------------------------------------------------------------
+# app
+
+- name: Create app user
+  become: true
+  user:
+    name: "{{ app_user.user }}"
+    home: /app
+
+
+- name: Add admins ssh keys in app authorized_keys
+  become: true
+  become_user: "{{ app_user.user }}"
+  authorized_key:
+    user: "{{ app_user.user }}"
+    key: "{{ item.key }}"
+  with_items: "{{ admin_users }}"
+
+
+- name: Manage app directory
+  become: true
+  file:
+    path: /app
+    mode: 0755

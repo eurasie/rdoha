@@ -7,19 +7,21 @@
 - name: Check mandatory variables condition
   assert:
     that:
-      - mysql_version         is defined
-      - mysql_home            is defined
-      - mysql_client_port     is defined
-      - mysql_root_account    is defined
-      - mysql_app_database    is defined
-      - mysql_app_account     is defined
+      - mariadb_version          is defined
+      - mariadb_home             is defined
+      - mariadb_port             is defined
+      - mariadb_root_password    is defined
+      - mariadb_app_database     is defined
+      - mariadb_app_account      is defined
     msg: "Some variables are missing."
 
 
 - include: "{{ deploy_tasks }}"
   with_items:
-    - requirements.yml
+    - update_check.yml
     - firewall.yml
+    - install.yml
+    - secure_installation.yml
     - databases.yml
     - users.yml
   loop_control:

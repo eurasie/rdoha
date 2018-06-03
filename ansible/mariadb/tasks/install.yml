@@ -1,0 +1,36 @@
+# Tasks to install and setup MariaDB Server
+
+
+- name: Install MariaDB {{ mariadb_version }}
+  become: true
+  yum:
+    name: "mariadb-server-{{ mariadb_version }}"
+    state: present
+  notify:
+    - stop mariadb
+    - configure MariaDB port
+    - configure MariaDB service
+    - configure MariaDB client
+    - move mysql user home directory
+    - restart mariadb
+
+
+- name: Trigger handlers immediately
+  meta: flush_handlers
+
+
+- name: Fix upgrade incompatibilities
+  command:
+    mysql_upgrade -u root -p{{ mariadb_root_password }}
+  when:
+    - mariadb_previous_version is defined
+    - mariadb_version != mariadb_previous_version
+  notify:
+    - restart mariadb
+
+
+- name: Install Ansible dependencies for MariaDB managment
+  become: true
+  yum:
+    name: MySQL-python
+    state: present

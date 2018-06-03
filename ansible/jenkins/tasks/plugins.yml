@@ -4,7 +4,7 @@
 - name: Get the jenkins-cli jarfile from the Jenkins server
   become: true
   get_url:
-    url: "http://127.0.0.1:{{ jenkins_http_port }}/jnlpJars/jenkins-cli.jar"
+    url: "http://127.0.0.1:{{ jenkins_http_port }}{{ jenkins_url }}/jnlpJars/jenkins-cli.jar"
     dest: "{{ jenkins_jar }}"
     force: yes
   register: jarfile_get
@@ -13,6 +13,13 @@
   delay: 10
   check_mode: no
   when: jenkins_fresh_install.changed
+
+
+- name: Create updates directory
+  become: true
+  file:
+    path: "{{ jenkins_home }}"
+    state: directory
 
 
 - name: Update Jenkins plugin data.
@@ -25,11 +32,11 @@
 - name: Install Jenkins plugins using root account
   become: true
   command: >
-    java -jar {{ jenkins_jar }} -s http://127.0.0.1:{{ jenkins_http_port }}
-    install-plugin {{ item }}
-    --username {{ jenkins_accounts[0].user }}
-    --password {{ jenkins_accounts[0].password }}
-    creates="{{ jenkins_home }}/plugins/{{ item }}.jpi"
+    java -jar {{ jenkins_jar }} -s http://127.0.0.1:{{ jenkins_http_port }}{{ jenkins_url }}
+      install-plugin {{ item }}
+      --username {{ jenkins_accounts[0].user }}
+      --password {{ jenkins_accounts[0].password }}
+      creates="{{ jenkins_home }}/plugins/{{ item }}.jpi"
   with_items: "{{ jenkins_plugins }}"
   notify:
     - restart jenkins

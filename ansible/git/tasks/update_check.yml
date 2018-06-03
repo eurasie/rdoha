@@ -1,0 +1,36 @@
+# Tasks to check for update and remove previous installation of Git
+
+
+- name: Get installed Git info
+  command: git --version
+  ignore_errors: yes
+  changed_when: false
+  register: git_info
+
+
+- set_fact:
+    git_previous_version: "{{
+        git_info.stdout
+          | regex_replace('^.* (\\d+\\.\\d+\\.\\d+).*$', '\\1')
+      }}"
+  when: git_info.stdout is defined
+
+
+- name: Remove previous installation from repository
+  become: true
+  yum:
+    name: git
+    state: absent
+
+
+- name: Remove previous installation from sources
+  become: true
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ git_home }}"
+    - "/opt/git-{{ git_previous_version }}"
+  when:
+    - git_previous_version is defined
+    - git_version != git_previous_version

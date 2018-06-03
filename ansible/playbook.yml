@@ -1,10 +1,15 @@
 # Rdoha Project Playbook
 
 
-- name: Set up CentOS server
+- name: Set up Rdoha project
   hosts: rdoha_server
   roles:
+    # LAMP Server
     - centos
     - httpd
-    - mysql
+    - mariadb
+    - php
+    # Continuous integration
     - jenkins
+
+#    - noip

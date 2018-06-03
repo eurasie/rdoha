@@ -19,6 +19,6 @@
   become: true
   lineinfile:
     dest: /etc/hosts
-    line: "127.0.0.1 localhost {{ inventory_hostname }}"
+    line: "127.0.0.1   localhost {{ inventory_hostname }}"
     insertbefore: BOF
     state: present

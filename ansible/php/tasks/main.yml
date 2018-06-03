@@ -1,0 +1,23 @@
+# Main task
+
+
+- include_vars: secrets.yml
+
+
+- name: Check mandatory variables condition
+  assert:
+    that:
+      - php_version     is defined
+    msg: "Some variables are missing."
+
+
+- include: "{{ deploy_tasks }}"
+  with_items:
+    - update_check.yml
+    - install.yml
+  loop_control:
+    loop_var: deploy_tasks
+
+
+- name: Trigger handlers immediately
+  meta: flush_handlers

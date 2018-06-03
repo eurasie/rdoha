@@ -1,0 +1,41 @@
+# Task to install java on CentOS
+
+
+- name: Get Java {{ java_version }} sources
+  become: true
+  get_url:
+    # See http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html for latest
+    url: http://download.oracle.com/otn-pub/java/jdk/{{ java_build }}/{{ java_archive }}
+    dest: /opt/{{ java_archive }}
+    headers: "Cookie: oraclelicense=accept-securebackup-cookie"
+  register: java_sources
+
+
+- name: Unarchive Java {{ java_version }} sources
+  become: true
+  unarchive:
+    src: /opt/{{ java_archive }}
+    dest: /opt/
+    remote_src: yes
+  when: java_sources.changed
+
+
+- name: Install Java {{ java_version }} Oracle JDK
+  become: true
+  shell: |
+    alternatives --install /usr/bin/java  java  {{ java_home }}/bin/java  1
+    alternatives --install /usr/bin/jar   jar   {{ java_home }}/bin/jar   1
+    alternatives --install /usr/bin/javac javac {{ java_home }}/bin/javac 1
+  when: java_sources.changed
+
+
+- name: Setup environment with Java
+  become: true
+  template:
+    src: java.sh
+    dest: /etc/profile.d/
+
+
+# Refresh environment
+- name: Trigger fact gathering (setup)
+  setup:
